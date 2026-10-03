@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>IELTS · Миша ❤️ и Дашуля ❤️</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f6efe4">
+<style>
+:root{--bg:#f6efe4;--card:#fffaf1;--tx:#4a3f35;--mu:#8c7f72;--bd:#eadfce;--ac:#c79a73;--p1:#c79a73;--p2:#d98e93;--ok:#8fae7e;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#2a241e;--card:#352e27;--tx:#f3eadf;--mu:#b3a595;--bd:#4a4037;--ac:#d9aa80;--p1:#d9aa80;--p2:#e6a0a5;--ok:#9dbd8c}}
+:root[data-theme="dark"]{--bg:#2a241e;--card:#352e27;--tx:#f3eadf;--mu:#b3a595;--bd:#4a4037;--ac:#d9aa80;--p1:#d9aa80;--p2:#e6a0a5;--ok:#9dbd8c}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 Georgia,"Times New Roman",serif}
+main{max-width:620px;margin:0 auto;padding:18px 16px 40px}
+h1{font-size:24px;text-align:center;margin:6px 0 16px;font-weight:600}
+h2{font-size:17px;margin:18px 0 8px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:0 2px 8px rgba(120,90,60,.06)}
+.profs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.prof{text-align:center;cursor:pointer;border:2px solid transparent}
+.prof.me{border-color:var(--c)}
+.prof b{font-size:17px}.pct{font-size:34px;font-weight:700;color:var(--c)}
+.bar{height:10px;background:var(--bd);border-radius:9px;overflow:hidden;margin:6px 0}
+.bar i{display:block;height:100%;background:var(--c);transition:width .5s}
+.mu{color:var(--mu);font-size:13px}
+.mod{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 0;border-top:1px solid var(--bd)}
+.mod:first-of-type{border-top:0}
+.btn{padding:10px 16px;border:0;border-radius:12px;background:var(--ac);color:#fff;font:inherit;font-weight:600}
+.btn.s{background:transparent;color:var(--tx);border:1px solid var(--bd)}
+.btn:disabled{opacity:.45}
+.ok{color:var(--ok);font-weight:700}
+.q{margin:12px 0}.opt{display:block;padding:9px 12px;margin:5px 0;border:1px solid var(--bd);border-radius:12px;cursor:pointer}
+.opt.sel{border-color:var(--ac);background:var(--bd)}
+.opt.good{border-color:var(--ok)}.opt.bad{border-color:var(--p2)}
+textarea{width:100%;min-height:200px;padding:12px;border:1px solid var(--bd);border-radius:12px;background:var(--bg);color:var(--tx);font:inherit}
+.passage{background:var(--bg);border-radius:12px;padding:12px;font-size:15px}
+.fly{position:fixed;bottom:-30px;font-size:26px;animation:fly 2.8s ease-in forwards;pointer-events:none;z-index:9}@keyframes fly{to{transform:translateY(-115vh) rotate(25deg);opacity:0}}.love{font-size:21px;font-weight:700;margin:6px 0;line-height:1.3}.note{border-color:var(--p2)}.hide{display:none}.big{font-size:40px;text-align:center;font-weight:700}
+</style></head><body><main>
+<h1>🥛 IELTS вдвоём</h1>
+<div class="profs" id="profs"></div>
+<div id="home"></div>
+<div id="work" class="hide"></div>
+<div id="st" class="mu" style="text-align:center;margin-top:14px"></div>
+<script>
+// === НАСТРОЙКА ОБЩЕЙ БАЗЫ ===
+// Вставьте сюда адрес Firebase Realtime Database, например:
+// const FB='https://ielts-misha-dasha-default-rtdb.europe-west1.firebasedatabase.app';
+// Проще: подключить базу прямо на сайте (вкладка ⚙️). Пока базы нет, сайт работает в режиме одного устройства.
+let FB='',dbx=null;
+const PROF={misha:{name:'Миша ❤️',c:'var(--p1)'},dasha:{name:'Дашуля ❤️',c:'var(--p2)'}};
+const Q=(q,o,a)=>({q,o:o.split('|'),a});
+const TF=(q,a)=>Q(q,'True|False|Not Given',a);
+const R=(n,t,text,qs)=>({id:'r'+n,t:'reading',title:'Reading '+n+' · '+t,text,qs});
+const L=(n,t,script,qs)=>({id:'l'+n,t:'listening',title:'Listening '+n+' · '+t,script,qs});
+const T=[
+{id:'r1',t:'reading',title:'Reading 1 · City Bees',text:'Urban beekeeping has grown quickly in recent years. Many cities now allow residents to keep hives on rooftops and balconies. Supporters say bees find plenty of food in parks and gardens, where flowers bloom for much of the year. In fact, city honey is sometimes produced in larger quantities than honey from farms, because farmland often offers only one crop at a time. However, some experts warn that too many hives can leave wild pollinators short of food.',qs:[
+{q:'Where do some cities allow people to keep hives?',o:['Only in parks','On rooftops and balconies','Only on farms'],a:1},
+{q:'Why can city honey be plentiful?',o:['Cities have more bees','Gardens offer varied flowers','Farms ban hives'],a:1},
+{q:'What do some experts worry about?',o:['Honey prices','Noise from hives','Wild pollinators lacking food'],a:2}]},
+{id:'r2',t:'reading',title:'Reading 2 · Sleep and Memory',text:'Scientists have long known that sleep affects learning. A recent study asked two groups of students to memorise word lists. One group slept for eight hours afterwards, while the other stayed awake. The next day, students who had slept recalled about 20 percent more words. Researchers believe that during deep sleep the brain strengthens new memories and removes unimportant information.',qs:[
+{q:'What did both groups have to do?',o:['Memorise word lists','Write essays','Solve puzzles'],a:0},
+{q:'How much better did the sleeping group recall?',o:['About 8 percent','About 20 percent','About 50 percent'],a:1},
+{q:'What happens in deep sleep, according to researchers?',o:['The brain stops working','Memories are strengthened','New words are invented'],a:1}]},
+{id:'l1',t:'listening',title:'Listening 1 · Library Registration',script:'Good morning. I would like to join the city library. Of course. Can I have your name, please? It is Anna Whitfield, that is W-H-I-T-F-I-E-L-D. Thank you. The membership is free, but you must bring proof of address. The library opens at nine in the morning and closes at six, except on Fridays, when it closes at four.',qs:[
+{q:'What is the surname?',o:['Whitfield','Whitfeld','Witfield'],a:0},
+{q:'What must the new member bring?',o:['A photo','Proof of address','Ten pounds'],a:1},
+{q:'When does the library close on Fridays?',o:['At four','At five','At six'],a:0}]},
+{id:'l2',t:'listening',title:'Listening 2 · Weekend Trip',script:'Hi Tom, it is Sara. About the trip on Saturday. The train leaves at half past seven, so please be at the station by seven. We will walk about eight kilometres along the coast. Bring a waterproof jacket because rain is expected in the afternoon. Lunch is not included, so pack sandwiches.',qs:[
+{q:'What time should they be at the station?',o:['7:00','7:30','8:00'],a:0},
+{q:'How far will they walk?',o:['Five kilometres','Eight kilometres','Eighteen kilometres'],a:1},
+{q:'What should Tom bring?',o:['A waterproof jacket','A tent','A map only'],a:0}]},
+
+R(3,'Coffee','Coffee was first grown in Ethiopia, but today Brazil produces more than any other country. Beans are picked by hand on many farms, which makes the work slow. After picking, the beans are dried in the sun for about two weeks before being roasted.',[Q('Which country grows the most coffee today?','Ethiopia|Brazil|Kenya',1),Q('Why is the work slow on many farms?','Beans are picked by hand|Machines break|Farms are small',0),Q('How long are beans dried?','Two days|Two weeks|Two months',1)]),
+R(4,'Electric Cars','Sales of electric cars have risen sharply because running costs are lower than for petrol cars. However, many drivers worry about the lack of charging points in rural areas. Governments are now offering money to companies that build new stations.',[Q('Why have sales risen?','Lower running costs|Cheaper batteries|Faster speeds',0),Q('Where is charging a problem?','In cities|In rural areas|In car parks',1),Q('What are governments doing?','Banning petrol cars|Paying companies to build stations|Closing roads',1)]),
+R(5,'Coral Reefs','Coral reefs cover less than one percent of the ocean floor, yet they support about a quarter of all marine species. Rising sea temperatures cause corals to lose their colour, a process called bleaching. Scientists are testing heat-resistant corals to help reefs recover.',[Q('How much of the ocean floor do reefs cover?','Under one percent|A quarter|Half',0),Q('What causes bleaching?','Pollution|Rising temperatures|Fishing',1),Q('What are scientists testing?','New boats|Heat-resistant corals|Cleaner water',1)]),
+R(6,'Online Learning','Online courses allow students to study at any time, which suits people with full-time jobs. Nevertheless, many learners fail to finish because they miss the support of a classroom. Courses that include group discussions have noticeably higher completion rates.',[Q('Who do online courses suit?','Young children|People with full-time jobs|Teachers only',1),Q('Why do many learners quit?','Courses are expensive|They miss classroom support|Exams are hard',1),Q('What improves completion rates?','Group discussions|Shorter videos|Free books',0)]),
+R(7,'The Marathon','The marathon distance is 42.195 kilometres. The race was inspired by a legend about a Greek messenger who ran from the town of Marathon to Athens. Today, thousands of amateur runners take part in marathons, and many raise money for charity.',[Q('How long is a marathon?','26 km|42.195 km|50 km',1),Q('What inspired the race?','A royal decision|A Greek legend|An Olympic rule',1),Q('What do many runners do?','Raise money for charity|Win prizes|Run professionally',0)]),
+R(8,'Glass Recycling','Glass can be recycled endlessly without losing quality. Making new bottles from recycled glass uses about thirty percent less energy than using raw materials. Even so, in some countries less than half of all glass is collected.',[Q('What is true of glass?','It weakens each time|It can be recycled endlessly|It cannot be melted',1),Q('How much energy is saved?','About thirty percent|About half|About ten percent',0),Q('What is the problem in some countries?','Poor quality|Less than half is collected|High prices',1)]),
+R(9,'Public Libraries','Public libraries are changing. Besides lending books, many now offer free internet access, job-search workshops and meeting rooms. Visitor numbers fell for several years, but have started to rise again in cities that expanded these services.',[Q('What do libraries offer besides books?','Cinema tickets|Free internet and workshops|Cheap food',1),Q('What happened to visitor numbers?','They fell, then began to rise|They always rose|They never changed',0),Q('Where have numbers recovered?','Where services expanded|In small villages|Where books are free',0)]),
+R(10,'Volcanoes','There are about 1,500 potentially active volcanoes on Earth. Although eruptions can be dangerous, volcanic soil is very fertile, so many people live nearby to farm. Monitoring stations measure small earthquakes, which often warn of an eruption.',[Q('How many volcanoes may be active?','About 150|About 1,500|About 15,000',1),Q('Why do people live near volcanoes?','Cheap land|Fertile soil|Warm weather',1),Q('What can warn of an eruption?','Small earthquakes|Strong winds|Heavy rain',0)]),
+L(3,'Hotel Booking','Good afternoon, Riverside Hotel. I would like a double room for three nights from the twelfth of May. Certainly. Breakfast costs twelve pounds per person, extra. Is there parking? Yes, but it costs five pounds a day. Could I have your phone number? It is oh seven seven double-one, four five six.',[Q('How many nights?','Two|Three|Five',1),Q('How much is breakfast?','£5|£12|£15',1),Q('What does parking cost per day?','£5|£12|Free',0)]),
+L(4,'Gym Membership','Welcome to FitZone. We have two memberships. The standard one is thirty pounds a month and includes the gym only. The premium one is forty-five pounds and also includes the swimming pool and classes. Both require a joining fee of twenty pounds, which is waived this month.',[Q('Standard membership costs?','£30|£45|£20',0),Q('What does premium add?','Pool and classes|Personal trainer|Free towels',0),Q('What happens to the joining fee this month?','It doubles|It is waived|It is half price',1)]),
+L(5,'University Lecture','Today’s lecture is about renewable energy. First, we will look at solar power, which grew by twenty percent last year. After the break, we will discuss wind farms. Your essay on this topic is due on Friday the ninth, and it should be about two thousand words.',[Q('What is the lecture about?','Renewable energy|Climate history|Oil prices',0),Q('How much did solar power grow?','2%|20%|200%',1),Q('When is the essay due?','Friday the ninth|Monday the ninth|Friday the nineteenth',0)]),
+L(6,'Restaurant Order','Hello, are you ready to order? Yes, I will have the mushroom soup to start, then the grilled salmon. Would you like anything to drink? Just sparkling water, please. I am afraid the salmon takes twenty minutes. That is fine. Also, I am allergic to nuts. Don’t worry, the dish contains none.',[Q('What is the starter?','Tomato soup|Mushroom soup|Salad',1),Q('How long does the salmon take?','Ten minutes|Twenty minutes|Thirty minutes',1),Q('What is the customer allergic to?','Fish|Nuts|Milk',1)]),
+L(7,'City Bus Tour','Welcome aboard the city tour. The bus stops at the cathedral first, where you have forty minutes. Next is the old market, but please note it is closed on Mondays. The tour ends at the harbour at four o’clock. Tickets are valid all day, so you can get on and off.',[Q('How long at the cathedral?','Twenty minutes|Forty minutes|One hour',1),Q('When is the market closed?','Mondays|Sundays|Fridays',0),Q('When does the tour end?','3:00|4:00|5:00',1)]),
+L(8,'Flat Rental','I am calling about the flat on Garden Road. It has two bedrooms and the rent is nine hundred pounds a month. Bills are not included. You can move in from the first of June. The landlord asks for a deposit equal to one month’s rent.',[Q('How many bedrooms?','One|Two|Three',1),Q('Monthly rent?','£190|£900|£1,900',1),Q('How big is the deposit?','One month’s rent|Two months’ rent|£500',0)]),
+L(9,'Phone Shop','I bought this phone last week, but the battery runs out in three hours. I am sorry to hear that. Do you have the receipt? Yes, here it is. We can replace it free of charge, but the new one will take five working days to arrive. Can I get a temporary phone? Yes, for a small deposit.',[Q('What is the problem?','The screen|The battery|The camera',1),Q('How long for the replacement?','Five working days|Five hours|Fifteen days',0),Q('What is needed for a temporary phone?','A receipt|A small deposit|A new contract',1)]),
+L(10,'Study Group','So, the project is due in three weeks. Maria, you will collect the data, and Jack will write the introduction. I will prepare the charts. Let’s meet every Wednesday at five in the library, in room four. If someone cannot come, please send a message the day before.',[Q('When is the project due?','In two weeks|In three weeks|In a month',1),Q('Who writes the introduction?','Maria|Jack|The speaker',1),Q('Where do they meet?','Library, room four|Cafe|Room fourteen',0)]),
+
+R(11,'Glaciers','Glaciers store about 69 percent of the world’s fresh water. Over the last century most have been retreating, and the rate has accelerated since 1990. Meltwater feeds rivers that supply drinking water and irrigation to hundreds of millions of people. Some scientists argue that covering small glaciers with reflective blankets could slow melting, though the method is too costly for large areas.',[TF('Glaciers hold most of the world’s fresh water.',0),TF('Glacier retreat has slowed since 1990.',1),TF('Reflective blankets have been tested in Switzerland.',2),Q('What is the drawback of reflective blankets?','They are too costly for large areas|They attract animals|They speed up melting',0)]),
+R(12,'Cycling to Work','A survey of 5,000 commuters in a European capital found that cyclists reached work faster than drivers on journeys under eight kilometres. Cycling also reduced sick days by an average of two per year. Nevertheless, only nine percent of respondents cycled regularly, mainly because they feared traffic. City planners say protected lanes would encourage more people to switch.',[TF('Cyclists were quicker than drivers on short journeys.',0),TF('Cycling increased the number of sick days.',1),TF('Most respondents received a bicycle from their employer.',2),Q('Why do most people not cycle?','They fear traffic|There are no showers|The weather is bad',0)]),
+R(13,'The Printing Press','The printing press, developed in the 1450s, made books far cheaper to produce. Before it, a single manuscript could take a monk several months to copy. Within fifty years, millions of books had been printed across Europe. Historians believe printed material helped scientific ideas circulate more quickly, although literacy remained low in many regions.',[TF('Printing made books cheaper.',0),TF('Copying a manuscript took only a few days.',1),TF('The first printed book was a Bible.',2),Q('What did printing help to do, according to historians?','Spread ideas faster|Create jobs for monks|Lower paper prices',0)]),
+R(14,'Urban Noise','Noise pollution is increasingly recognised as a health risk. Studies link long-term exposure to traffic noise with sleep disturbance and higher blood pressure. The World Health Organization recommends that night-time noise stay below 40 decibels, yet in many cities levels regularly exceed 60. Some councils have responded by introducing quieter road surfaces.',[TF('The WHO recommends night-time noise below 40 decibels.',0),TF('Noise in most cities stays within WHO limits.',1),TF('Quieter road surfaces reduce accidents.',2),Q('Traffic noise is linked with…','sleep problems and high blood pressure|poor eyesight|weight loss',0)]),
+R(15,'Tea','Tea is the most widely consumed drink in the world after water. It was first cultivated in China, and legend says it was discovered when leaves fell into the emperor’s boiling water. All true teas come from the same plant; the differences between green, black and oolong depend on how the leaves are processed. Herbal infusions, by contrast, contain no tea leaves.',[TF('Water is drunk more widely than tea.',0),TF('Green and black tea come from different plants.',1),TF('Tea is more popular in Britain than in China.',2),Q('What makes types of tea different?','How the leaves are processed|The type of soil|The height of the farm',0)]),
+R(16,'Space Debris','Thousands of pieces of discarded equipment orbit the Earth at speeds of up to 28,000 kilometres per hour. Even a fragment the size of a paint chip can damage a spacecraft. Agencies track objects larger than ten centimetres, but smaller fragments are far more numerous and harder to monitor. Several companies are developing satellites designed to capture old equipment and pull it into the atmosphere.',[TF('A paint-sized fragment can damage a spacecraft.',0),TF('All debris smaller than ten centimetres is tracked.',1),TF('Capture satellites are already used commercially.',2),Q('Why is small debris a problem?','It is numerous and hard to monitor|It is radioactive|It moves slowly',0)]),
+R(17,'Disappearing Languages','Around 7,000 languages are spoken today, but nearly half are expected to disappear by the end of the century. On average a language dies every two weeks, usually when children stop learning it. Some communities have created language nests, where elderly speakers look after young children and talk to them only in the heritage language.',[TF('About 7,000 languages are spoken today.',0),TF('A language disappears every two years.',1),TF('Language nests were first created in New Zealand.',2),Q('When does a language usually die?','When children stop learning it|When books are lost|When governments ban it',0)]),
+R(18,'Wind Power','Denmark generates more than half of its electricity from wind. Turbines produce most power in winter, when demand is highest. When production exceeds demand, the surplus is exported to neighbouring countries or used to heat homes through district heating. Critics say wind farms spoil the landscape, but surveys show that most local residents support them.',[TF('More than half of Danish electricity comes from wind.',0),TF('Turbines produce most power in summer.',1),TF('Wind farms have lowered house prices.',2),Q('What happens to surplus electricity?','It is exported or used for heating|It is wasted|It is stored only in batteries',0)]),
+R(19,'Modern Museums','Many museums have shifted from simply displaying objects to creating interactive experiences. Touchscreens, workshops and virtual reality allow visitors to engage with exhibits in new ways. Research suggests that visitors remember more when they take part actively. However, some curators fear that technology distracts people from the objects themselves.',[TF('Visitors remember more when they participate.',0),TF('All curators welcome new technology.',1),TF('Virtual reality is the most popular museum feature.',2),Q('What worries some curators?','Technology distracts from the objects|Falling visitor numbers|High ticket prices',0)]),
+R(20,'Teenage Sleep','Teenagers need between eight and ten hours of sleep, yet surveys show that most get fewer than seven. Biological changes shift their body clocks later, making it hard to fall asleep before eleven. Several schools that delayed lessons by one hour reported better attendance and improved exam results. Experts also advise avoiding screens in the hour before bed.',[TF('Teenagers need eight to ten hours of sleep.',0),TF('Later school starts made attendance worse.',1),TF('Most teenagers use their phones in bed.',2),Q('Why do teenagers fall asleep late?','Their body clocks shift later|They have too much homework|Their rooms are noisy',0)]),
+L(11,'Sports Centre','Welcome to Parkside Sports Centre. The swimming pool is open from six thirty to ten, Monday to Saturday. Children under eight must be accompanied by an adult. Tennis courts can be booked online, and a one-hour session costs eight pounds. Lockers need a one-pound coin, which you get back afterwards.',[Q('When does the pool open?','6:30|7:00|8:00',0),Q('Children under eight must…','be with an adult|wear a cap|pay extra',0),Q('Tennis costs per hour?','£8|£18|£80',0),Q('Lockers need…','a £1 coin that is returned|a £5 deposit|nothing',0)]),
+L(12,'Interview Call','Hello, this is Karen from Greenfield Marketing. We would like to invite you for an interview on Thursday the fourteenth at two thirty. Please go to the second floor and ask for Mr Patel. You will need to give a ten-minute presentation about a recent project. Bring a copy of your passport, as we must check your right to work.',[Q('Interview time?','2:30|3:30|12:30',0),Q('Which floor?','Second|Third|Ground',0),Q('How long is the presentation?','Ten minutes|Twenty minutes|Five minutes',0),Q('What must be brought?','A copy of a passport|A reference letter|A portfolio',0)]),
+L(13,'Railway Museum','This museum was built in 1895 as a railway station. The ground floor has the transport collection, including a steam engine that still runs on the first Sunday of every month. The second floor café serves lunch until three. Photography is allowed, but flash is not permitted in the textile room.',[Q('The building was originally…','a railway station|a school|a market',0),Q('When does the steam engine run?','First Sunday of each month|Every Saturday|Last Friday',0),Q('Lunch is served until…','3:00|4:00|2:00',0),Q('Where is flash forbidden?','Textile room|Ground floor|Café',0)]),
+L(14,'Shared House','Hi, I am calling about the room in the shared house. There are four tenants and the room is on the top floor. Rent is four hundred and twenty pounds a month, including internet. The house is a ten-minute walk from the university. The only problem is that the kitchen is quite small.',[Q('How many tenants?','Four|Three|Five',0),Q('Monthly rent?','£420|£240|£520',0),Q('How far is the university?','Ten-minute walk|Twenty-minute bus ride|One hour',0),Q('What is the problem?','Small kitchen|Noise|No internet',0)]),
+L(15,'Weather Forecast','Tomorrow will start cloudy across the north, with light rain spreading from the west by noon. Temperatures will reach fourteen degrees in the south but only nine in the north. Winds will be strong along the coast, so ferry services may be delayed. The weekend looks drier, with sunny spells on Sunday.',[Q('Rain spreads from…','the west|the east|the south',0),Q('Temperature in the south?','14°|9°|19°',0),Q('What may happen to ferries?','They may be delayed|They will be cancelled|Nothing',0),Q('Sunday will be…','sunny in spells|very wet|snowy',0)]),
+L(16,'Spanish Course','The evening Spanish course runs for ten weeks, beginning on the third of October. Classes are on Tuesdays from six thirty to eight. The fee is one hundred and sixty pounds, but students receive a twenty percent discount. The textbook is not included and can be bought at the school office.',[Q('Course length?','Ten weeks|Twelve weeks|Eight weeks',0),Q('Which day?','Tuesdays|Thursdays|Mondays',0),Q('Student discount?','20%|10%|None',0),Q('The textbook…','is sold at the office|is included|is online only',0)]),
+L(17,'Recycling in Town','In our town, plastic and metal go in the blue bin, collected every second Wednesday. Glass must be taken to the bottle bank at the supermarket. Garden waste is collected weekly from March to November, but you must buy special paper sacks. Large items such as sofas can be collected for a fee if you phone the council.',[Q('Blue bin collection?','Every second Wednesday|Weekly|Monthly',0),Q('Where does glass go?','Supermarket bottle bank|Blue bin|Green bin',0),Q('Garden waste needs…','paper sacks|plastic bags|free bins',0),Q('Large items are…','collected for a fee|not collected|collected free',0)]),
+L(18,'Farm Visit','Welcome to Hillside Farm. We will begin with the dairy, where you can watch the morning milking at nine. After that, children can feed the lambs in the red barn. Lunch is served at twelve thirty in the farm shop and all dishes use ingredients from the farm. Please stay behind the fence near the bull.',[Q('Milking time?','9:00|10:00|8:00',0),Q('Children can…','feed the lambs|ride horses|pick apples',0),Q('Where is lunch?','Farm shop|Red barn|Dairy',0),Q('Near the bull, visitors must…','stay behind the fence|wear boots|keep quiet',0)]),
+L(19,'Presentation Talk','So, how is your presentation going? I have finished the slides, but I am worried about the timing, because we only have fifteen minutes. Maybe cut the section about history. Good idea. And shall I practise with you tomorrow? Yes, after the lecture, around four.',[Q('Time limit?','15 minutes|10 minutes|20 minutes',0),Q('What will they cut?','The history section|The conclusion|The charts',0),Q('When will they practise?','Tomorrow around four|Tonight|Tomorrow morning',0)]),
+L(20,'Lost Property','I lost my bag on the number twelve bus yesterday evening. Can you describe it? It is a black leather rucksack with a silver zip. What was inside? A laptop, a blue notebook and a water bottle. Please fill in the form online; if we find it, we will email you within two working days. There is a five-pound handling fee.',[Q('Which bus?','Number 12|Number 21|Number 2',0),Q('The bag is…','a black leather rucksack|a brown suitcase|a blue handbag',0),Q('They will email within…','two working days|two weeks|the same day',0),Q('The handling fee?','£5|£15|None',0)])
+];
+const TL={reading:'📖 Reading',listening:'🎧 Listening'};
+const $=id=>document.getElementById(id);
+let view='tests',me=null,data={misha:{done:{}},dasha:{done:{}}},db=null,tm=null;
+try{me=localStorage.getItem('who')}catch(e){}
+const pct=k=>Math.round(Object.keys(data[k].done||{}).filter(i=>T.some(t=>t.id===i)).length/T.length*1000)/10;
+function head(){
+  $('profs').innerHTML=Object.entries(PROF).map(([k,p])=>`<div class="card prof ${me===k?'me':''}" style="--c:${p.c}" data-k="${k}"><b>${p.name}</b><div class="pct">${pct(k)}%</div><div class="bar"><i style="width:${pct(k)}%"></i></div><div class="mu">🏆 ${badgesFor(data[k].done).filter(b=>b.ok).length}</div><div class="mu">${me===k?'вы здесь':'нажмите, чтобы войти'}</div></div>`).join('');
+}
+$('profs').onclick=e=>{const k=e.target.closest('.prof')?.dataset.k;if(k){me=k;try{localStorage.setItem('who',k)}catch(_){}back()}};
+function home(){
+  head();let h='',bn='';const oth=me==='misha'?'dasha':me==='dasha'?'misha':null;if(oth){const e=Object.entries(data[oth].done||{}).filter(([i])=>T.some(t=>t.id===i)).sort((a,b)=>b[1].ts-a[1].ts)[0];if(e)bn+=`<div class="card note" style="text-align:center">💌 ${PROF[oth].name} недавно прошла(а) тест: <b>${T.find(t=>t.id===e[0]).title}</b></div>`.replace('прошла(а)',oth==='dasha'?'прошла':'прошёл')}
+  const tabs=`<div style="display:flex;gap:8px;margin-bottom:12px"><button class="btn ${view==='tests'?'':'s'}" data-view="tests" style="flex:1">📝 Тесты</button><button class="btn ${view==='rewards'?'':'s'}" data-view="rewards" style="flex:1">🏆 Награды</button><button class="btn ${view==='settings'?'':'s'}" data-view="settings">⚙️</button></div>`;
+  h+=tabs;if(view==='settings')h+=settingsCard();else if(!me)h+='<div class="card mu" style="text-align:center">Выберите свой профиль выше 💛</div>';
+  else if(view==='rewards')h+=flower()+badgeCard()+noteCard();
+  else{h+=bn;for(const ty of Object.keys(TL)){h+=`<h2>${TL[ty]}</h2><div class="card">`+T.filter(t=>t.t===ty).map(t=>{const d=data[me].done[t.id],tr=(data[me].tries||{})[t.id];return `<div class="mod"><div>${t.title}<div class="mu">+${(100/T.length).toFixed(1)}% к прогрессу${d&&d.s!=null?' · пройден '+d.s:''}${tr?' · попыток: '+tr.n+', лучший: '+tr.best+'/'+tr.N:''}</div></div>${d?'<span class="ok" style="font-size:15px">✅ Пройден</span>':`<button class="btn" data-go="${t.id}">Начать</button>`}</div>`}).join('')+'</div>'}}
+  $('home').innerHTML=h;
+}
+$('home').onclick=e=>{const i=e.target.id;
+  if(i==='fbgo'){const v=$('fburl').value.trim();if(v){try{localStorage.setItem('bk_fb',v)}catch(_){}location.hash='';location.reload()}return}
+  if(i==='fboff'){try{localStorage.removeItem('bk_fb')}catch(_){}location.hash='';location.reload();return}
+  if(i==='fbcopy'){const l=inviteLink();(navigator.clipboard?navigator.clipboard.writeText(l):Promise.reject()).then(()=>$('st').textContent='✓ Ссылка скопирована').catch(()=>{$('fblink').select();$('st').textContent='Нажмите «Скопировать» в меню выделения'});return}
+const v=e.target.dataset.view;if(v){view=v;return home()}if(e.target.id==='nsave')return saveNote();const id=e.target.dataset.go;if(id)open(T.find(t=>t.id===id))};
+function back(){clearInterval(tm);speechSynthesis&&speechSynthesis.cancel();$('work').classList.add('hide');$('home').classList.remove('hide');home()}
+function settingsCard(){return `<div class="card"><b>ℹ️ Общий прогресс</b><p class="mu">${FB?'Прогресс общий: вы видите результаты друг друга.':'Общая база недоступна, прогресс хранится на этом устройстве.'}</p></div>`}
+function api(path,val){if(!dbx)return Promise.reject(new Error('nodb'));return dbx.collection('kv').doc(path.split('/').join('_')).set({path,val})}
+async function save(id,right,N){
+  const d=data[me];d.done=d.done||{};d.tries=d.tries||{};
+  const tr=d.tries[id]||{n:0,best:0};tr.n++;tr.best=Math.max(tr.best,right);tr.N=N;d.tries[id]=tr;
+  const pass=right===N,first=pass&&!d.done[id];if(first)d.done[id]={s:right+'/'+N,ts:Date.now()};
+  try{localStorage.setItem('bk_'+me,JSON.stringify(d))}catch(_){}
+  head();
+  if(!FB){$('st').textContent='ℹ️ Режим одного устройства: результат сохранён на этом устройстве';return}
+  $('st').textContent='⏳ Сохраняю…';
+  try{
+    if(first)await api('users/'+me+'/done/'+id,d.done[id]);
+    await api('users/'+me+'/tries/'+id,{n:tr.n,best:tr.best,N});
+    $('st').textContent='✓ Результат сохранён';
+  }catch(e){$('st').textContent='⚠️ Не удалось сохранить в общую базу. Копия есть на этом устройстве'}
+}
+const PR={misha:['Ты большой молодец ❤️','Я тобой горжусь ❤️','Продолжай в том же духе ❤️','Мой умница, так держать ✨❤️','Ты справился блестяще 🥛❤️'],dasha:['Ты большая молодец ❤️','Я тобой горжусь ❤️','Продолжай в том же духе ❤️','Моя умничка ✨❤️','Ты справилась блестяще 🥛❤️']};
+const PRC=['Ещё один шаг к IELTS — вместе мы справимся ❤️','IELTS ещё не знает, что его ждёт 💪❤️','Каждый тест приближает нас к мечте ✨','Какая же вы классная пара 🥛❤️'];
+const MS={25:'Четверть пути пройдена! 🎉❤️',50:'Половина уже позади! Вы великолепны 🌟❤️',75:'Осталось совсем чуть-чуть, финиш близко 🏁❤️',100:'100%! Вы готовы покорять IELTS 👑❤️'};
+const BD=[['t',1,'👣','Первый шаг'],['t',3,'🔥','Разогрелись'],['t',5,'⭐','Пятёрочка'],['t',10,'🏅','Десятка'],['t',20,'🥈','Половина пути'],['t',30,'🥇','Почти профи'],['t',40,'👑','Мастер IELTS'],['r',10,'📚','Книжный червь'],['l',10,'🎧','Чуткое ухо']];
+function badgesFor(dn){const ids=Object.keys(dn||{}).filter(i=>T.some(t=>t.id===i));const c={t:ids.length,r:ids.filter(i=>i[0]==='r').length,l:ids.filter(i=>i[0]==='l').length};return BD.map(([k,n,ic,nm])=>({id:k+n,ic,nm,need:n,have:c[k],ok:c[k]>=n,k}))}
+function badgeCard(){if(!me)return'';const b=badgesFor(data[me].done);return `<div class="card"><div class="mu" style="margin-bottom:8px">🏆 Награды · ${b.filter(x=>x.ok).length} из ${b.length}</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">`+b.map(x=>`<div style="text-align:center;padding:8px 4px;border:1px solid var(--bd);border-radius:12px;${x.ok?'':'opacity:.4;filter:grayscale(1)'}"><div style="font-size:28px">${x.ic}</div><div style="font-size:12px;line-height:1.2">${x.nm}</div><div class="mu" style="font-size:11px">${x.ok?'получено':(x.k==='t'?'':x.k==='r'?'Reading ':'Listening ')+x.have+'/'+x.need}</div></div>`).join('')+'</div></div>'}
+let notes={};
+const esc=x=>String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function flower(){const a=Math.round((pct('misha')+pct('dasha'))/2),st=[[0,'🌰','Семечко посажено'],[10,'🌱','Появился росточек'],[25,'🌿','Растёт зелёный стебелёк'],[45,'🪴','Уже настоящее растение'],[65,'🌷','Появился бутон'],[85,'🌸','Цветок распускается'],[100,'💐','Целый букет — вы молодцы!']].filter(x=>a>=x[0]).pop();
+  return `<div class="card" style="text-align:center"><div class="mu">Наш общий цветок</div><div style="font-size:64px;line-height:1.2">${st[1]}</div><b>${st[2]}</b><div class="mu">Растёт, когда занимаетесь вы оба · вместе ${a}%</div></div>`}
+function noteCard(){if(!me)return'';const o=me==='misha'?'dasha':'misha',n=notes[o],mine=notes[me];
+  return `<div class="card note"><div class="mu">💌 Записки</div>${n?`<p style="font-size:18px;margin:8px 0">«${esc(n.text)}»<br><span class="mu">— ${PROF[o].name}</span></p>`:`<p class="mu">${PROF[o].name} пока не оставил${o==='dasha'?'а':''} записку</p>`}<textarea id="ntext" maxlength="140" style="min-height:64px" placeholder="Написать записку для ${PROF[o].name}…">${esc(mine?mine.text:'')}</textarea><button class="btn" id="nsave" style="margin-top:8px;width:100%">Оставить записку 💌</button></div>`}
+async function saveNote(){const t=$('ntext').value.trim();if(!t||!me)return;notes[me]={uid:me,text:t,ts:Date.now()};
+  try{localStorage.setItem('bk_notes',JSON.stringify(notes))}catch(_){}
+  if(!FB){$('st').textContent='💌 Записка сохранена на этом устройстве';return}
+  try{await api('users/'+me+'/note',{text:t,ts:notes[me].ts});$('st').textContent='💌 Записка оставлена'}catch(e){$('st').textContent='⚠️ Не удалось оставить записку'}}
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+function hearts(){for(let i=0;i<20;i++){const e=document.createElement('span');e.className='fly';e.textContent=pick(['❤️','💛','🤍','✨','🥛']);e.style.left=Math.random()*95+'%';e.style.animationDelay=Math.random()*.8+'s';document.body.appendChild(e);setTimeout(()=>e.remove(),4000)}}
+const shuf=a=>a.map(x=>[Math.random(),x]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
+function open(t){$('home').classList.add('hide');$('work').classList.remove('hide');quiz(t)}
+function quiz(t){
+  const w=$('work'),listen=t.t==='listening',N=t.qs.length;
+  const qs=shuf(t.qs).map(q=>({q:q.q,o:(q.o[0]==='True'?(x=>x):shuf)(q.o.map((x,j)=>({x,ok:j===q.a})))}));
+  const ans=[],wasDone=!!(data[me].done||{})[t.id],before=pct(me);let done=false,right=0,msg='',nb='';
+  const render=()=>{
+    w.innerHTML=`<button class="btn s" id="bk">← Назад</button><h2>${t.title}</h2>`+
+    (listen?`<div class="card"><button class="btn" id="pl">▶ Прослушать запись</button><div class="mu">Запись читает голос браузера. В настоящем IELTS её дают один раз — попробуйте так же.</div>${done?`<p class="passage">${t.script}</p>`:''}</div>`:`<div class="card passage">${t.text}</div>`)+
+    qs.map((q,i)=>`<div class="card q"><b>${i+1}. ${q.q}</b>`+q.o.map((o,j)=>`<label class="opt ${ans[i]===j&&!done?'sel':''} ${done&&o.ok?'good':''} ${done&&ans[i]===j&&!o.ok?'bad':''}" data-q="${i}" data-o="${j}">${o.x}${done&&o.ok?' ✓':''}${done&&ans[i]===j&&!o.ok?' ✗':''}</label>`).join('')+'</div>').join('')+
+    (!done?`<button class="btn" id="ck" style="width:100%" ${ans.filter(x=>x!=null).length<N?'disabled':''}>Проверить</button>`:
+      right===N?`<div class="card note" style="text-align:center"><div class="big">🎉</div><div class="love">${msg}</div>${nb}<b>Все верно: ${right}/${N}</b><div class="mu">${wasDone?'Это повторная попытка — прогресс уже засчитан':'+'+(100/T.length).toFixed(1)+'% к вашему прогрессу'}</div><button class="btn" id="rt" style="margin-top:10px">Пройти ещё раз</button> <button class="btn s" id="ok" style="margin-top:10px">К списку</button></div>`:
+      `<div class="card" style="text-align:center"><b>Верно ${right} из ${N}</b><div class="love" style="font-size:17px">Ничего страшного, с каждой попыткой ты всё ближе ❤️</div><div class="mu">Попытка сохранена. Тест засчитывается в прогресс, когда все ответы правильные. Правильные ответы отмечены зелёным — попробуйте ещё раз, варианты перемешаются.</div><button class="btn" id="rt" style="margin-top:10px">Пройти ещё раз</button> <button class="btn s" id="ok" style="margin-top:10px">К списку</button></div>`);
+    $('bk').onclick=back;
+    if(listen)$('pl').onclick=()=>{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.script);u.lang='en-GB';u.rate=.9;speechSynthesis.speak(u)};
+    w.querySelectorAll('.opt').forEach(el=>el.onclick=()=>{if(done)return;ans[+el.dataset.q]=+el.dataset.o;render()});
+    if($('ck'))$('ck').onclick=async()=>{right=ans.filter((a,i)=>qs[i].o[a].ok).length;done=true;if(right===N){const now=Math.round((Object.keys(data[me].done||{}).length+(wasDone?0:1))/T.length*100);const ms=wasDone?null:[25,50,75,100].find(m=>before<m&&now>=m);msg=ms?MS[ms]:pick([...PR[me],...PRC]);if(!wasDone){const nd=Object.assign({},data[me].done,{[t.id]:1}),old=badgesFor(data[me].done),nw=badgesFor(nd).filter((b,i)=>b.ok&&!old[i].ok);if(nw.length)nb='<div class="love" style="font-size:17px">🏆 Новая награда: '+nw.map(b=>b.ic+' '+b.nm).join(', ')+'</div>'}hearts()}render();await save(t.id,right,N)};
+    if($('rt'))$('rt').onclick=()=>quiz(t);
+    if($('ok'))$('ok').onclick=back;
+  };render();
+}
+const refresh=()=>{if(document.activeElement&&document.activeElement.id==='ntext')return;if($('work').classList.contains('hide'))home();else head()};
+function loadLocal(){for(const k of Object.keys(data)){try{const l=JSON.parse(localStorage.getItem('bk_'+k));if(l)data[k]=Object.assign({done:{},tries:{}},l)}catch(_){}}try{const n=JSON.parse(localStorage.getItem('bk_notes'));if(n)notes=n}catch(_){}}
+let firstPull=true;
+async function pull(){
+  try{
+    const r=await fetch(FB.replace(/\/$/,'')+'/users.json');if(!r.ok)throw new Error(r.status);
+    const u=(await r.json())||{};
+    for(const k of Object.keys(data)){
+      const x=u[k]||{};
+      if(k===me||firstPull){for(const id of Object.keys(data[k].done||{}))if(!(x.done||{})[id])api('users/'+k+'/done/'+id,data[k].done[id]).catch(()=>{});for(const id of Object.keys(data[k].tries||{}))if(!(x.tries||{})[id])api('users/'+k+'/tries/'+id,data[k].tries[id]).catch(()=>{})}
+      const keep=firstPull||k===me;data[k].done=Object.assign({},keep?data[k].done:{},x.done||{});data[k].tries=Object.assign({},keep?data[k].tries:{},x.tries||{});
+      if(x.note)notes[k]={uid:k,text:x.note.text,ts:x.note.ts};
+    }
+    firstPull=false;if($('st').textContent.startsWith('⚠️ Нет связи'))$('st').textContent='';
+    refresh();
+  }catch(e){$('st').textContent='⚠️ Нет связи с общей базой, пробую снова…'}
+}
+function applyRemote(u){
+  for(const k of Object.keys(data)){
+    const x=u[k]||{};
+    if(k===me){for(const id of Object.keys(data[k].done||{}))if(!(x.done||{})[id])api('users/'+k+'/done/'+id,data[k].done[id]).catch(()=>{});for(const id of Object.keys(data[k].tries||{}))if(!(x.tries||{})[id])api('users/'+k+'/tries/'+id,data[k].tries[id]).catch(()=>{})}
+    const keep=k===me;data[k].done=Object.assign({},keep?data[k].done:{},x.done||{});data[k].tries=Object.assign({},keep?data[k].tries:{},x.tries||{});
+    if(x.note)notes[k]={uid:k,text:x.note.text,ts:x.note.ts};
+  }
+  refresh();
+}
+async function init(){
+  loadLocal();home();
+  try{dbx=await claude.use('db')}catch(e){dbx=null}
+  if(!dbx){$('st').textContent='ℹ️ Режим одного устройства: общая база недоступна';return}
+  FB='db';
+  dbx.collection('kv').onSnapshot(sn=>{const u={};sn.docs.forEach(d=>{const v=d.data();if(!v||!v.path)return;const p=v.path.split('/');let c=u;for(let i=1;i<p.length-1;i++)c=c[p[i]]=c[p[i]]||{};c[p[p.length-1]]=v.val});applyRemote(u)},()=>{$('st').textContent='⚠️ Ошибка синхронизации'});
+}
+init();
+</script></main></body></html>
